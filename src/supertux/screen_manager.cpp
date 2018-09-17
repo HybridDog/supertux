@@ -38,8 +38,8 @@
 
 #include <stdio.h>
 
-/** don't skip more than every 2nd frame */
-static const int MAX_FRAME_SKIP = 2;
+/** wait at least MIN_TICKS for every frame */
+static const int MIN_TICKS = 2;
 
 ScreenManager::ScreenManager(VideoSystem& video_system, InputManager& input_manager) :
   m_video_system(video_system),
@@ -399,27 +399,24 @@ ScreenManager::run()
       elapsed_ticks = 0;
     }
 
-    if (elapsed_ticks < ticks_per_frame)
+    if (elapsed_ticks == 0)
     {
-      Uint32 delay_ticks = ticks_per_frame - elapsed_ticks;
+      Uint32 delay_ticks = MIN_TICKS;
       SDL_Delay(delay_ticks);
       last_ticks += delay_ticks;
       elapsed_ticks += delay_ticks;
     }
 
-    int frames = 0;
-
-    while (elapsed_ticks >= ticks_per_frame && frames < MAX_FRAME_SKIP)
+    if (elapsed_ticks >= MIN_TICKS)
     {
-      elapsed_ticks -= ticks_per_frame;
-      float timestep = 1.0f / m_target_framerate;
+      float timestep = elapsed_ticks / (1000.0 * g_game_speed);
+      elapsed_ticks = 0;
       g_real_time += timestep;
       timestep *= m_speed;
       g_game_time += timestep;
 
       process_events();
       update_gamelogic(timestep);
-      frames += 1;
     }
 
     if (!m_screen_stack.empty())
