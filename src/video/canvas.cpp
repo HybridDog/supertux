@@ -47,11 +47,14 @@ Canvas::clear()
     request->~DrawingRequest();
   }
   m_requests.clear();
+  m_batches.clear();
 }
 
 void
 Canvas::render(Renderer& renderer, Filter filter)
 {
+  draw_global_batches();
+
   // On a regular level, each frame has around 50-250 requests (before
   // batching it was 1000-3000), the sort comparator function is
   // called approximatly 3-7 times for each request.
@@ -140,6 +143,34 @@ void
 Canvas::draw_surface(const SurfacePtr& surface, const Vector& position, int layer)
 {
   draw_surface(surface, position, 0.0f, Color(1.0f, 1.0f, 1.0f), Blend(), layer);
+}
+
+void
+Canvas::draw_surface_to_global_batch(const SurfacePtr& surface, int layer,
+  const Vector& position, float angle)
+{
+  auto key = std::pair<SurfacePtr, int>(surface, layer);
+  auto it = m_batches.find(key);
+  if (it == m_batches.end()) {
+    // Add a new batch
+    const auto& batch_it = m_batches.emplace(key, SurfaceBatch(surface));
+    batch_it.first->second.draw(position, angle);
+  } else {
+    it->second.draw(position, angle);
+  }
+}
+
+void
+Canvas::draw_global_batches()
+{
+  for (auto& it : m_batches) {
+    auto& surface = it.first.first;
+    auto& z_pos = it.first.second;
+    auto& batch = it.second;
+    // FIXME: What is the colour used for?
+    draw_surface_batch(surface, batch.move_srcrects(), batch.move_dstrects(),
+      batch.move_angles(), Color::WHITE, z_pos);
+  }
 }
 
 void

@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <memory>
 #include <obstack.h>
 
@@ -34,6 +35,7 @@
 #include "video/gradient.hpp"
 #include "video/layer.hpp"
 #include "video/paint_style.hpp"
+#include "video/surface_batch.hpp"
 
 class DrawingContext;
 class Renderer;
@@ -52,6 +54,8 @@ public:
   void draw_surface(const SurfacePtr& surface, const Vector& position, int layer);
   void draw_surface(const SurfacePtr& surface, const Vector& position, float angle, const Color& color, const Blend& blend,
                     int layer);
+  void draw_surface_to_global_batch(const SurfacePtr& surface, int layer,
+    const Vector& position, float angle);
   void draw_surface_part(const SurfacePtr& surface, const Rectf& srcrect, const Rectf& dstrect,
                          int layer, const PaintStyle& style = PaintStyle());
   void draw_surface_scaled(const SurfacePtr& surface, const Rectf& dstrect,
@@ -92,11 +96,19 @@ public:
 
 private:
   Vector apply_translate(const Vector& pos) const;
+  void draw_global_batches();
 
 private:
   DrawingContext& m_context;
   obstack& m_obst;
   std::vector<DrawingRequest*> m_requests;
+
+  struct tex_level_hash {
+    std::size_t operator () (const std::pair<SurfacePtr, int> &p) const {
+      return std::hash<SurfacePtr>{}(p.first) ^ std::hash<int>{}(p.second);
+    }
+  };
+  std::unordered_map<std::pair<SurfacePtr, int>, SurfaceBatch, tex_level_hash> m_batches;
 
 private:
   Canvas(const Canvas&) = delete;

@@ -46,7 +46,8 @@ RainSplash::update(float dt_sec)
 void
 RainSplash::draw(DrawingContext& context)
 {
-  sprite->draw(context.color(), position, LAYER_OBJECTS);
+  //~ sprite->draw(context.color(), position, LAYER_OBJECTS);
+  sprite->draw_to_global_batch(context.color(), position, LAYER_OBJECTS);
 }
 
 /* EOF */

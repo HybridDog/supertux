@@ -31,8 +31,8 @@ public:
   SpritePtr clone() const;
 
   /** Draw sprite, automatically calculates next frame */
-  void draw(Canvas& canvas, const Vector& pos, int layer,
-            Flip flip = NO_FLIP);
+  void draw(Canvas& canvas, const Vector& pos, int layer, Flip flip = NO_FLIP);
+  void draw_to_global_batch(Canvas& canvas, const Vector& pos, int layer);
 
   /** Set action (or state) */
   void set_action(const std::string& name, int loops = -1);

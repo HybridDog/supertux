@@ -155,6 +155,17 @@ Sprite::draw(Canvas& canvas, const Vector& pos, int layer,
   context.pop_transform();
 }
 
+void
+Sprite::draw_to_global_batch(Canvas& canvas, const Vector& pos, int layer)
+{
+  assert(m_action != nullptr);
+  update();
+
+  // No colour, blend and flip
+  canvas.draw_surface_to_global_batch(m_action->surfaces[m_frameidx], layer,
+    pos - Vector(m_action->x_offset, m_action->y_offset), m_angle);
+}
+
 int
 Sprite::get_width() const
 {

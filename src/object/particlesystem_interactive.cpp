@@ -61,7 +61,7 @@ ParticleSystem_Interactive::draw(DrawingContext& context)
   if (!enabled)
     return;
 
-  context.push_transform();
+  //~ context.push_transform();
 
   std::unordered_map<SurfacePtr, SurfaceBatch> batches;
   for (const auto& particle : particles) {
@@ -83,7 +83,7 @@ ParticleSystem_Interactive::draw(DrawingContext& context)
       batch.move_dstrects(), Color::WHITE, z_pos);
   }
 
-  context.pop_transform();
+  //~ context.pop_transform();
 }
 
 int
