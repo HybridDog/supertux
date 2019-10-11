@@ -111,15 +111,14 @@ void check_collisions(collision::Constraints* constraints,
     }
   }
 
-  constraints->ground_movement += other_movement;
+  constraints->change_movement_constrained(other_movement);
   if (other != nullptr && object != nullptr) {
     const HitResponse response = other->collision(*object, dummy);
     if (response == ABORT_MOVE)
       return;
 
     if (other->get_movement() != Vector(0, 0)) {
-      // TODO what todo when we collide with 2 moving objects?!?
-      constraints->ground_movement += other->get_movement();
+      constraints->change_movement_constrained(other->get_movement());
     }
   }
 

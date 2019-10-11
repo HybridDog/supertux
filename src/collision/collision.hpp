@@ -95,6 +95,21 @@ public:
     speed_bottom = std::min (speed_bottom, velocity);
   }
 
+  // If the object has collided before, ground_movement is changed so that
+  // the movement cannot go to a direction where a previous hit happened
+  // Example: Crusher tries to push Tux through the roof
+  void change_movement_constrained(const Vector& other_movement)
+  {
+    Vector movement_new = ground_movement + other_movement;
+    if ((movement_new.y < 0.0f && hit.top)
+        || (movement_new.y > 0.0f && hit.bottom))
+      movement_new.y = 0.0f;
+    if ((movement_new.x < 0.0f && hit.left)
+        || (movement_new.x > 0.0f && hit.right))
+      movement_new.x = 0.0f;
+    ground_movement = movement_new;
+  }
+
   float get_position_left   () const { return position_left;   }
   float get_position_right  () const { return position_right;  }
   float get_position_top    () const { return position_top;    }
