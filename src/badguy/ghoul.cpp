@@ -35,12 +35,12 @@ Ghoul::Ghoul(const ReaderMapping& reader) :
 {
   reader.get("flyspeed", m_flyspeed, FLYSPEED);
   reader.get("track-range", m_track_range, TRACK_RANGE);
-  
+
   bool running;
   reader.get("running", running, false);
 
   init_path(reader, running);
-  
+
   m_sprite->set_action(m_dir == Direction::LEFT ? "left" : "right", /* loops = */ -1);
 }
 
@@ -104,18 +104,18 @@ Ghoul::active_update(float dt_sec)
   }
 
   auto player = get_nearest_player();
-  if (!player) 
-  return;
-  Vector p1 = m_col.m_bbox.get_middle();
-  Vector p2 = player->get_bbox().get_middle();
-  Vector dist = (p2 - p1);
-  
+  if (!player)
+    return;
+  Vector self_pos = m_col.m_bbox.get_middle();
+  Vector player_pos = player->get_bbox().get_middle();
+  Vector dist = player_pos - self_pos;
+
   const Rectf& player_bbox = player->get_bbox();
-  
+
   if (player_bbox.get_right() < m_col.m_bbox.get_left()) {
     m_sprite->set_action("left", -1);
   }
-  
+
   if (player_bbox.get_left() > m_col.m_bbox.get_right()) {
     m_sprite->set_action("right", -1);
   }
@@ -130,15 +130,29 @@ Ghoul::active_update(float dt_sec)
       }
       break;
 
-    case STATE_TRACKING:
-      if (dist.norm() >= 1) {
-        Vector dir_ = dist.unit();
-        m_col.m_movement = dir_ * dt_sec * m_flyspeed;
-      } else {
-        /* We somehow landed right on top of the player without colliding.
-         * Sit tight and avoid a division by zero. */
+    case STATE_TRACKING: {
+        float distance_to_player = dist.norm();
+        if (distance_to_player >= 1) {
+          // If we can predict a future player position which is nearer to us,
+          // we move there instead of the current player position.
+          Vector player_vel = player->get_velocity();
+          Vector predicted_player_pos = player_pos + player_vel * 0.8f;
+          if (predicted_player_pos.y > player_pos.y)
+            // We do not want to fly further down because it could be dangerous
+            predicted_player_pos.y = player_pos.y;
+          Vector dist_predicted = predicted_player_pos - self_pos;
+          Vector flight_direction;
+          if (dist_predicted.norm() < distance_to_player)
+            flight_direction = dist_predicted.unit();
+          else
+            flight_direction = dist.unit();
+          m_col.m_movement = flight_direction * dt_sec * m_flyspeed;
+        } else {
+          /* We somehow landed right on top of the player without colliding.
+           * Sit tight and avoid a division by zero. */
+        }
+        break;
       }
-      break;
 
     case STATE_PATHMOVING:
     case STATE_PATHMOVING_TRACK:
