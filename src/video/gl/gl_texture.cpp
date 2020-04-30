@@ -164,7 +164,7 @@ GLTexture::GLTexture(const SDL_Surface& image, const Sampler& sampler) :
       SDL_LockSurface(convert.get());
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA),
+    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_SRGB_ALPHA),
                  m_texture_width, m_texture_height, 0, sdl_format,
                  GL_UNSIGNED_BYTE, convert->pixels);
 

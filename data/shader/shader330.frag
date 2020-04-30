@@ -14,11 +14,22 @@ in vec2 texcoord_var;
 
 out vec4 fragColor;
 
+
+// MIT
+// https://github.com/tobspr/GLSL-Color-Spaces/blob/master/ColorSpaces.inc.glsl
+const float SRGB_GAMMA = 1.0 / 2.2;
+// Converts a linear rgb color to a srgb color (approximated, but fast)
+vec3 rgb_to_srgb_approx(vec3 rgb) {
+    return pow(rgb, vec3(SRGB_GAMMA));
+}
+
 void main(void)
 {
   if (backbuffer == 0.0)
   {
-    vec4 color =  diffuse_var * texture(diffuse_texture, texcoord_var.st + (animate * game_time));
+    vec4 color = texture(diffuse_texture, texcoord_var.st + (animate * game_time));
+    color.rgb = rgb_to_srgb_approx(color.rgb);
+    color *= diffuse_var;
     fragColor = color;
   }
   else if (true)
@@ -31,7 +42,9 @@ void main(void)
     uv = vec2(uv.x, 1.0 - uv.y);
     vec4 back_color = texture(framebuffer_texture, uv);
 
-    vec4 color =  diffuse_var * texture(diffuse_texture, texcoord_var.st + (animate * game_time));
+    vec4 color =  texture(diffuse_texture, texcoord_var.st + (animate * game_time));
+    color.rgb = rgb_to_srgb_approx(color.rgb);
+    color *= diffuse_var;
     fragColor = vec4(mix(color.rgb, back_color.rgb, alpha), color.a);
   }
   else
