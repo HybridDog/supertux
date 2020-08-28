@@ -60,6 +60,11 @@ public:
         return color();
     }
   }
+  void beforeRendering()
+  {
+    m_colormap_canvas.prepareRendering();
+    m_lightmap_canvas.prepareRendering();
+  }
 
   void set_ambient_color(Color ambient_color);
   Color get_ambient_color() const { return m_ambient_color; }

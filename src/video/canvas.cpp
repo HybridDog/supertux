@@ -49,25 +49,28 @@ Canvas::clear()
   m_requests.clear();
 }
 
-void
-Canvas::render(Renderer& renderer, Filter filter)
+void Canvas::prepareRendering()
 {
   // On a regular level, each frame has around 50-250 requests (before
   // batching it was 1000-3000), the sort comparator function is
   // called approximatly 3-7 times for each request.
   std::stable_sort(m_requests.begin(), m_requests.end(),
-                   [](const DrawingRequest* r1, const DrawingRequest* r2){
-                     return r1->layer < r2->layer;
-                   });
+    [](const DrawingRequest* r1, const DrawingRequest* r2) {
+      return r1->layer < r2->layer; });
+}
 
+void
+Canvas::render(Renderer& renderer, Filter filter)
+{
   Painter& painter = renderer.get_painter();
 
+  // The requests are sorted in ascending order
   for (const auto& i : m_requests) {
     const DrawingRequest& request = *i;
 
     if (filter == BELOW_LIGHTMAP && request.layer >= LAYER_LIGHTMAP)
-      continue;
-    else if (filter == ABOVE_LIGHTMAP && request.layer <= LAYER_LIGHTMAP)
+      break;
+    if (filter == ABOVE_LIGHTMAP && request.layer <= LAYER_LIGHTMAP)
       continue;
 
     switch (request.type) {

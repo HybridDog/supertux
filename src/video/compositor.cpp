@@ -58,6 +58,10 @@ Compositor::render()
 
   use_lightmap = use_lightmap && s_render_lighting;
 
+  for (auto& ctx : m_drawing_contexts) {
+    ctx->beforeRendering();
+  }
+
   // prepare lightmap
   if (use_lightmap)
   {

@@ -86,6 +86,7 @@ public:
   void get_pixel(const Vector& position, const std::shared_ptr<Color>& color_out);
 
   void clear();
+  void prepareRendering();
   void render(Renderer& renderer, Filter filter);
 
   DrawingContext& get_context() { return m_context; }
