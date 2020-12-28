@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2015 Hume2 <teratux.mail@gmail.com>
+//  Copyright (C) 2020 A. Semphris <semphris@protonmail.com>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -14,35 +14,38 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_SUPERTUX_EDITOR_TIP_HPP
-#define HEADER_SUPERTUX_EDITOR_TIP_HPP
+#include <editor/bezier_marker.hpp>
 
-#include <string>
-#include <vector>
-
-class DrawingContext;
-class GameObject;
-class Vector;
-
-class Tip final
+BezierMarker::BezierMarker(Path::Node* node, Vector& bezier_pos) :
+  m_node(node),
+  m_pos(bezier_pos)
 {
-public:
-  Tip(GameObject& object);
-  Tip(std::string text);
-  Tip(std::string header, std::vector<std::string> text);
+  set_pos(m_pos - Vector(8, 8));
+}
 
-  void draw(DrawingContext& context, const Vector& pos);
-  void draw_up(DrawingContext& context, const Vector& pos);
+Vector
+BezierMarker::get_point_vector() const
+{
+  return m_pos - m_node->position;
+}
 
-private:
-  std::vector<std::string> m_strings;
-  std::string m_header;
+Vector
+BezierMarker::get_offset() const
+{
+  return Vector(8, 8);
+}
 
-private:
-  Tip(const Tip&) = delete;
-  Tip& operator=(const Tip&) = delete;
-};
+void
+BezierMarker::move_to(const Vector& pos)
+{
+  MovingObject::move_to(pos);
+  m_pos = m_col.m_bbox.get_middle();
+}
 
-#endif
+void
+BezierMarker::editor_update()
+{
+  set_pos(m_pos - Vector(8, 8));
+}
 
 /* EOF */
