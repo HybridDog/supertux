@@ -978,6 +978,8 @@ EditorOverlayWidget::on_key_up(const SDL_KeyboardEvent& key)
   if (sym == SDLK_LCTRL || sym == SDLK_RCTRL) {
     autotile_mode = !autotile_mode;
     action_pressed = false;
+    // Hovered objects depend on which keys are pressed
+    hover_object();
   }
   if (sym == SDLK_LALT || sym == SDLK_RALT) {
     alt_pressed = false;
@@ -998,6 +1000,8 @@ EditorOverlayWidget::on_key_down(const SDL_KeyboardEvent& key)
   if (sym == SDLK_F5 || ((sym == SDLK_LCTRL || sym == SDLK_RCTRL) && !action_pressed)) {
     autotile_mode = !autotile_mode;
     action_pressed = true;
+    // Hovered objects depend on which keys are pressed
+    hover_object();
   }
   if (sym == SDLK_LALT || sym == SDLK_RALT) {
     alt_pressed = true;
