@@ -93,6 +93,8 @@ public:
 
   const std::vector<Node>& get_nodes() const { return m_nodes; }
 
+  bool get_adapt_speed() const { return m_adapt_speed; }
+
 public:
   std::vector<Node> m_nodes;
 

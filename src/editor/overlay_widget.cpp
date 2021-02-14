@@ -613,21 +613,50 @@ EditorOverlayWidget::move_object()
       }
     }
 
-    // Special case: Bezier markers should influence each other when holding shift
+    // Special case: Bezier markers should influence each other when holding alt
     if (alt_pressed) {
       auto bm = dynamic_cast<BezierMarker*>(m_dragged_object);
-      if (bm) {
-        auto nm = bm->get_parent();
-        if (nm) {
-          nm->move_other_marker(bm->get_uid(), nm->get_pos() * 2.f - new_pos);
-        } else {
-          log_warning << "Moving bezier handles without parent NodeMarker" << std::endl;
-        }
-      }
+      if (bm)
+        make_bezier_continuous(bm, new_pos);
     }
 
     m_dragged_object->move_to(new_pos);
   }
+}
+
+void
+EditorOverlayWidget::make_bezier_continuous(BezierMarker *bm,
+  const Vector& new_pos)
+{
+  NodeMarker* nm = bm->get_parent();
+  if (!nm) {
+    log_warning << "Moving bezier handles without parent NodeMarker" <<
+      std::endl;
+    return;
+  }
+  Vector nm_pos = nm->get_pos();
+  Vector off = new_pos - nm_pos;
+  bool is_before;
+  BezierMarker* bm_other = nm->get_other_marker(bm->get_uid(),
+    is_before);
+  if (m_edited_path->get_adapt_speed()) {
+    // The speed is variable, so make it C1 continuous
+    float time_1 = nm->get_prev_time();
+    float time_2 = nm->get_time();
+    float time_factor = 1.0f;
+    if (time_1 == 0 || time_2 == 0)
+      return;
+    time_factor = time_1 / time_2;
+    if (is_before)
+      time_factor = 1.0f / time_factor;
+    bm_other->move_to(nm->get_pos() - off * time_factor);
+    return;
+  }
+  // Fixed speed, so only G1 continuity is possible in general
+  float off_other_len = (bm_other->get_pos() - nm_pos).norm();
+  float off_len = off.norm();
+  if (off_other_len > 0 && off_len > 0)
+    bm_other->move_to(nm->get_pos() - off * off_other_len / off_len);
 }
 
 void
@@ -1112,7 +1141,7 @@ EditorOverlayWidget::draw_tile_grid(DrawingContext& context, const Color& line_c
   auto current_tm = m_editor.get_selected_tilemap();
   if (current_tm == nullptr)
     return;
- 
+
   int tm_width = current_tm->get_width() * (32 / tile_size);
   int tm_height = current_tm->get_height() * (32 / tile_size);
   auto cam_translation = m_editor.get_sector()->get_camera().get_translation();

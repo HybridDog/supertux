@@ -31,6 +31,7 @@ class Editor;
 class GameObject;
 class MovingObject;
 class NodeMarker;
+class BezierMarker;
 class Path;
 class Rectf;
 class Tip;
@@ -98,6 +99,9 @@ private:
   void show_object_menu(GameObject& object);
   void select_object();
   void add_path_node();
+  // Makes the Bezier curve C1 or G1 continuous (at least if there's no easing)
+  // at one NodeMarker
+  void make_bezier_continuous(BezierMarker* bm, const Vector& new_pos);
 
   void draw_tile_tip(DrawingContext&);
   void draw_tile_grid(DrawingContext&, const Color& line_color, int tile_size = 32);

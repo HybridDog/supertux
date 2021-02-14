@@ -38,9 +38,12 @@ public:
   void update_iterator();
   void update_node_times();
 
-  /** Moves the bezier marker that ISN'T @c marker to the given position. */
+  /** Returns the bezier marker that ISN'T @c marker. */
   /** Can't make the by reference because of overlay_widget.cpp */
-  void move_other_marker(UID marker, Vector position);
+  BezierMarker* get_other_marker(UID marker, bool &marker_is_before);
+
+  float get_time() const { return m_node->time; }
+  float get_prev_time() { return prev_node()->time; }
 
 private:
   Path* m_path;

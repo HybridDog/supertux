@@ -59,7 +59,7 @@ NodeMarker::remove_me()
     before->remove_me();
   if (after)
     after->remove_me();
-  
+
   MarkerObject::remove_me();
 }
 
@@ -123,7 +123,7 @@ NodeMarker::get_settings()
   result.add_label(_("Press CTRL to move Bezier handles"));
   result.add_float(_("Time"), &(m_node->time));
   result.add_float(_("Speed"), &(m_node->speed));
-  
+
   result.add_enum(_("Easing"), reinterpret_cast<int*>(&(m_node->easing)),
                   {
                     _("No easing"),
@@ -205,16 +205,13 @@ void NodeMarker::update_node_time(std::vector<Path::Node>::iterator current, std
   }
 }
 
-void
-NodeMarker::move_other_marker(UID marker, Vector position)
+BezierMarker*
+NodeMarker::get_other_marker(UID marker, bool &marker_is_before)
 {
   assert(marker == m_bezier_before || marker == m_bezier_after);
-
-  auto bm = Sector::current()->get_object_by_uid<BezierMarker>(
-                (marker == m_bezier_before) ? m_bezier_after : m_bezier_before);
-
-  if (bm)
-    bm->move_to(position);
+  marker_is_before = marker == m_bezier_before;
+  return Sector::current()->get_object_by_uid<BezierMarker>(
+    (marker == m_bezier_before) ? m_bezier_after : m_bezier_before);
 }
 
 /* EOF */
