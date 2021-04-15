@@ -279,55 +279,72 @@ EditorOverlayWidget::put_next_tiles()
 {
   if (m_hovered_tile == m_hovered_tile_prev)
     return;
-  // Line interpolation
-  // A tile at (x, y) contains all floating point vectors in [x, x+1) x [y, y+1)
-  Vector pos1 = m_hovered_tile;
-  Vector pos2 = m_hovered_tile_prev;
-  Vector diff = pos2 - pos1;
-  if (fabsf(diff.x) > fabsf(diff.y)) {
-    // Go along X, from left to right
-    if (diff.x < 0) {
-      Vector tmp = pos1;
-      pos1 = pos2;
-      pos2 = tmp;
-    }
-    float y_prev = pos1.y - 10.0f;
-    float y_step = diff.y / diff.x;
-    float x_first_gridline = floorf(pos1.x + 1.0f);
-    for (float x = x_first_gridline; x < pos2.x; ++x) {
-      float y = pos1.y + (x - pos1.x) * y_step;
-      if (floorf(y) != floorf(y_prev)) {
-        // The current tile is one higher than the previous one
-        put_tile(Vector(x - 0.5f, y));
-        y_prev = y;
+  auto interpolate_line = [](Vector pos1, Vector pos2)
+  {
+    // An integer position (x, y) contains all floating point vectors in
+    // [x, x+1) x [y, y+1)
+    std::vector<Vector> positions;
+    Vector diff = pos2 - pos1;
+    if (fabsf(diff.x) > fabsf(diff.y)) {
+      // Go along X, from left to right
+      if (diff.x < 0) {
+        Vector tmp = pos1;
+        pos1 = pos2;
+        pos2 = tmp;
       }
-      put_tile(Vector(x + 0.5f, y));
-    }
-    if (x_first_gridline > pos2.x && floorf(pos2.y) != floorf(pos1.y)) {
-      // The for loop was skipped although a new tile is hovered
-      put_tile(m_hovered_tile);
-    }
-  } else {
-    // Go along Y, from top to bottom
-    if (diff.y < 0) {
-      Vector tmp = pos1;
-      pos1 = pos2;
-      pos2 = tmp;
-    }
-    float x_prev = pos1.x - 10.0f;
-    float x_step = diff.x / diff.y;
-    float y_first_gridline = floorf(pos1.y + 1.0f);
-    for (float y = y_first_gridline; y < pos2.y; ++y) {
-      float x = pos1.x + (y - pos1.y) * x_step;
-      if (floorf(x) != floorf(x_prev)) {
-        put_tile(Vector(x, y - 0.5f));
-        x_prev = x;
+      positions.emplace_back(pos1);
+      float y_prev = pos1.y;
+      float y_step = diff.y / diff.x;
+      // The x coordinate of the first vertical grid line right of pos1
+      float x_first_gridline = floorf(pos1.x + 1.0f);
+      for (float x = x_first_gridline; x < pos2.x; ++x) {
+        // The y coordinate where our line intersects the vertical grid line
+        float y = pos1.y + (x - pos1.x) * y_step;
+        if (floorf(y) != floorf(y_prev)) {
+          // The current position is one horizontal grid line higher than
+          // the previous one,
+          // so add the position left to the current vertical grid line
+          positions.emplace_back(Vector(x - 0.5f, y));
+          y_prev = y;
+        }
+        // Add the position right to the current vertical grid line
+        positions.emplace_back(Vector(x + 0.5f, y));
       }
-      put_tile(Vector(x, y + 0.5f));
+      if (x_first_gridline > pos2.x && floorf(pos2.y) != floorf(pos1.y)) {
+        // Special case: a single horizontal grid line is crossed with an acute
+        // angle but no vertical grid line, so the for loop was skipped
+        positions.emplace_back(pos2);
+      }
+    } else {
+      // Go along Y, from top to bottom
+      if (diff.y < 0) {
+        Vector tmp = pos1;
+        pos1 = pos2;
+        pos2 = tmp;
+      }
+      positions.emplace_back(pos1);
+      float x_prev = pos1.x;
+      float x_step = diff.x / diff.y;
+      float y_first_gridline = floorf(pos1.y + 1.0f);
+      for (float y = y_first_gridline; y < pos2.y; ++y) {
+        float x = pos1.x + (y - pos1.y) * x_step;
+        if (floorf(x) != floorf(x_prev)) {
+          positions.emplace_back(Vector(x, y - 0.5f));
+          x_prev = x;
+        }
+        positions.emplace_back(Vector(x, y + 0.5f));
+      }
+      if (y_first_gridline > pos2.y && floorf(pos2.x) != floorf(pos1.x)) {
+        positions.emplace_back(pos2);
+      }
     }
-    if (y_first_gridline > pos2.y && floorf(pos2.x) != floorf(pos1.x)) {
-      put_tile(m_hovered_tile);
-    }
+    return positions;
+  };
+  // Interpolate on a sub-grid with twice width and height because autotiling
+  // needs to know the closest corner
+  for (const Vector &pos : interpolate_line(m_hovered_tile_prev * 2.0f,
+      m_hovered_tile * 2.0f)) {
+    put_tile(pos * 0.5f);
   }
   m_hovered_tile_prev = m_hovered_tile;
 }
