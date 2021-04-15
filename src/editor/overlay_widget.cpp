@@ -64,6 +64,7 @@ EditorOverlayWidget::EditorOverlayWidget(Editor& editor) :
   m_hovered_tile_prev(0, 0),
   m_sector_pos(0, 0),
   m_mouse_pos(0, 0),
+  m_time_prev_put_tile(std::chrono::steady_clock::now()),
   m_dragging(false),
   m_dragging_right(false),
   m_drag_start(0, 0),
@@ -277,10 +278,21 @@ EditorOverlayWidget::put_tile(const Vector& target_tile)
 void
 EditorOverlayWidget::put_next_tiles()
 {
-  if (m_hovered_tile == m_hovered_tile_prev)
+  auto time_now = std::chrono::steady_clock::now();
+  int expired_ms = static_cast<int>(std::chrono::duration_cast<
+    std::chrono::milliseconds>(time_now - m_time_prev_put_tile).count());
+  m_time_prev_put_tile = time_now;
+  if (expired_ms > 70) {
+    // Avoid drawing lines when the user has hold the left mouse button for some
+    // time while not putting a tile
+    put_tile(m_hovered_tile);
+    m_hovered_tile_prev = m_hovered_tile;
     return;
+  }
   auto interpolate_line = [](Vector pos1, Vector pos2)
   {
+    if (pos1 == pos2)
+      return std::vector<Vector> {pos1};
     // An integer position (x, y) contains all floating point vectors in
     // [x, x+1) x [y, y+1)
     std::vector<Vector> positions;
@@ -784,6 +796,7 @@ EditorOverlayWidget::process_left_click()
         case 0:
           put_tile(m_hovered_tile);
           m_hovered_tile_prev = m_hovered_tile;
+          m_time_prev_put_tile = std::chrono::steady_clock::now();
           break;
 
         case 1:

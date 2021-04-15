@@ -18,6 +18,7 @@
 #define HEADER_SUPERTUX_EDITOR_OVERLAY_WIDGET_HPP
 
 #include <SDL.h>
+#include <chrono>
 
 #include "control/input_manager.hpp"
 #include "editor/tile_selection.hpp"
@@ -126,6 +127,8 @@ private:
   Vector m_hovered_tile_prev;
   Vector m_sector_pos;
   Vector m_mouse_pos;
+
+  std::chrono::steady_clock::time_point m_time_prev_put_tile;
 
   bool m_dragging;
   bool m_dragging_right;
