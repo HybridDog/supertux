@@ -67,7 +67,8 @@ GLTexture::GLTexture(int width, int height, boost::optional<Color> fill_color) :
   assert_gl();
 }
 
-GLTexture::GLTexture(const SDL_Surface& image, const Sampler& sampler) :
+GLTexture::GLTexture(const SDL_Surface& image, const Sampler& sampler,
+    bool to_linear) :
   m_handle(),
   m_sampler(sampler),
   m_texture_width(),
@@ -164,7 +165,9 @@ GLTexture::GLTexture(const SDL_Surface& image, const Sampler& sampler) :
       SDL_LockSurface(convert.get());
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA),
+    GLint format = to_linear ? static_cast<GLint>(GL_SRGB_ALPHA)
+      : static_cast<GLint>(GL_RGBA);
+    glTexImage2D(GL_TEXTURE_2D, 0, format,
                  m_texture_width, m_texture_height, 0, sdl_format,
                  GL_UNSIGNED_BYTE, convert->pixels);
 

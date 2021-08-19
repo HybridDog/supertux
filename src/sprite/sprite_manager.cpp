@@ -30,8 +30,9 @@ SpriteManager::SpriteManager() :
 }
 
 SpritePtr
-SpriteManager::create(const std::string& name)
+SpriteManager::create(const std::string& name, bool to_linear)
 {
+  // TODO: the same sprite could be created with and without gamma correction
   Sprites::iterator i = sprites.find(name);
   SpriteData* data;
   if (i == sprites.end()) {
@@ -46,7 +47,7 @@ SpriteManager::create(const std::string& name)
     data = i->second.get();
   }
 
-  return SpritePtr(new Sprite(*data));
+  return SpritePtr(new Sprite(*data, to_linear));
 }
 
 SpriteData*

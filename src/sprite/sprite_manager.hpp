@@ -36,7 +36,7 @@ public:
   SpriteManager();
 
   /** loads a sprite. */
-  SpritePtr create(const std::string& filename);
+  SpritePtr create(const std::string& filename, bool to_linear=false);
 
 private:
   SpriteData* load(const std::string& filename);

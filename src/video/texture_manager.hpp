@@ -46,11 +46,13 @@ public:
   TextureManager();
   ~TextureManager() override;
 
-  TexturePtr get(const ReaderMapping& mapping, const boost::optional<Rect>& region = boost::none);
-  TexturePtr get(const std::string& filename);
+  TexturePtr get(const ReaderMapping& mapping,
+    const boost::optional<Rect>& region = boost::none, bool to_linear=false);
+  TexturePtr get(const std::string& filename, bool to_linear=false);
   TexturePtr get(const std::string& filename,
                  const boost::optional<Rect>& rect,
-                 const Sampler& sampler = Sampler());
+                 const Sampler& sampler = Sampler(),
+                 bool to_linear=false);
 
   void debug_print(std::ostream& out) const;
 
@@ -58,14 +60,18 @@ private:
   const SDL_Surface& get_surface(const std::string& filename);
   void reap_cache_entry(const Texture::Key& key);
 
-  TexturePtr create_image_texture(const std::string& filename, const Rect& rect, const Sampler& sampler);
+  TexturePtr create_image_texture(const std::string& filename, const Rect& rect,
+    const Sampler& sampler, bool to_linear);
 
   /** on failure a dummy texture is returned and no exception is thrown */
-  TexturePtr create_image_texture(const std::string& filename, const Sampler& sampler);
+  TexturePtr create_image_texture(const std::string& filename,
+    const Sampler& sampler, bool to_linear);
 
   /** throw an exception on error */
-  TexturePtr create_image_texture_raw(const std::string& filename, const Sampler& sampler);
-  TexturePtr create_image_texture_raw(const std::string& filename, const Rect& rect, const Sampler& sampler);
+  TexturePtr create_image_texture_raw(const std::string& filename,
+    const Sampler& sampler, bool to_linear);
+  TexturePtr create_image_texture_raw(const std::string& filename,
+    const Rect& rect, const Sampler& sampler, bool to_linear);
 
   TexturePtr create_dummy_texture();
 

@@ -95,7 +95,8 @@ TextureManager::~TextureManager()
 }
 
 TexturePtr
-TextureManager::get(const ReaderMapping& mapping, const boost::optional<Rect>& region)
+TextureManager::get(const ReaderMapping& mapping,
+  const boost::optional<Rect>& region, bool to_linear)
 {
   std::string filename;
   if (!mapping.get("file", filename))
@@ -177,11 +178,12 @@ TextureManager::get(const ReaderMapping& mapping, const boost::optional<Rect>& r
     }
   }
 
-  return get(filename, rect, Sampler(filter, wrap_s, wrap_t, animate));
+  return get(filename, rect, Sampler(filter, wrap_s, wrap_t, animate),
+    to_linear);
 }
 
 TexturePtr
-TextureManager::get(const std::string& _filename)
+TextureManager::get(const std::string& _filename, bool to_linear)
 {
   std::string filename = FileSystem::normalize(_filename);
   Texture::Key key(filename, Rect(0, 0, 0, 0));
@@ -192,7 +194,7 @@ TextureManager::get(const std::string& _filename)
     texture = i->second.lock();
 
   if (!texture) {
-    texture = create_image_texture(filename, Sampler());
+    texture = create_image_texture(filename, Sampler(), to_linear);
     texture->m_cache_key = key;
     m_image_textures[key] = texture;
   }
@@ -203,7 +205,8 @@ TextureManager::get(const std::string& _filename)
 TexturePtr
 TextureManager::get(const std::string& _filename,
                     const boost::optional<Rect>& rect,
-                    const Sampler& sampler)
+                    const Sampler& sampler,
+                    bool to_linear)
 {
   std::string filename = FileSystem::normalize(_filename);
   Texture::Key key;
@@ -225,11 +228,11 @@ TextureManager::get(const std::string& _filename,
   if (!texture) {
     if (rect)
     {
-      texture = create_image_texture(filename, *rect, sampler);
+      texture = create_image_texture(filename, *rect, sampler, to_linear);
     }
     else
     {
-      texture = create_image_texture(filename, sampler);
+      texture = create_image_texture(filename, sampler, to_linear);
     }
     texture->m_cache_key = key;
     m_image_textures[key] = texture;
@@ -254,11 +257,12 @@ TextureManager::reap_cache_entry(const Texture::Key& key)
 }
 
 TexturePtr
-TextureManager::create_image_texture(const std::string& filename, const Rect& rect, const Sampler& sampler)
+TextureManager::create_image_texture(const std::string& filename,
+  const Rect& rect, const Sampler& sampler, bool to_linear)
 {
   try
   {
-    return create_image_texture_raw(filename, rect, sampler);
+    return create_image_texture_raw(filename, rect, sampler, to_linear);
   }
   catch(const std::exception& err)
   {
@@ -290,7 +294,8 @@ TextureManager::get_surface(const std::string& filename)
 }
 
 TexturePtr
-TextureManager::create_image_texture_raw(const std::string& filename, const Rect& rect, const Sampler& sampler)
+TextureManager::create_image_texture_raw(const std::string& filename,
+  const Rect& rect, const Sampler& sampler, bool to_linear)
 {
   assert(rect.valid());
 
@@ -349,15 +354,16 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Rect
     }
   }
 
-  return VideoSystem::current()->new_texture(*subimage, sampler);
+  return VideoSystem::current()->new_texture(*subimage, sampler, to_linear);
 }
 
 TexturePtr
-TextureManager::create_image_texture(const std::string& filename, const Sampler& sampler)
+TextureManager::create_image_texture(const std::string& filename,
+  const Sampler& sampler, bool to_linear)
 {
   try
   {
-    return create_image_texture_raw(filename, sampler);
+    return create_image_texture_raw(filename, sampler, to_linear);
   }
   catch (const std::exception& err)
   {
@@ -367,7 +373,8 @@ TextureManager::create_image_texture(const std::string& filename, const Sampler&
 }
 
 TexturePtr
-TextureManager::create_image_texture_raw(const std::string& filename, const Sampler& sampler)
+TextureManager::create_image_texture_raw(const std::string& filename,
+  const Sampler& sampler, bool to_linear)
 {
   SDLSurfacePtr image = SDLSurface::from_file(filename);
   if (!image)
@@ -378,7 +385,8 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Samp
   }
   else
   {
-    TexturePtr texture = VideoSystem::current()->new_texture(*image, sampler);
+    TexturePtr texture = VideoSystem::current()->new_texture(*image, sampler,
+      to_linear);
     image.reset(nullptr);
     return texture;
   }
@@ -392,7 +400,8 @@ TextureManager::create_dummy_texture()
   // on error, try loading placeholder file
   try
   {
-    TexturePtr tex = create_image_texture_raw(dummy_texture_fname, Sampler());
+    TexturePtr tex = create_image_texture_raw(dummy_texture_fname, Sampler(),
+      false);
     return tex;
   }
   catch (const std::exception& err)

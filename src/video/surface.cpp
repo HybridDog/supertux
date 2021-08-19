@@ -32,14 +32,16 @@ Surface::from_reader(const ReaderMapping& mapping, const boost::optional<Rect>& 
   boost::optional<ReaderMapping> diffuse_texture_mapping;
   if (mapping.get("diffuse-texture", diffuse_texture_mapping))
   {
-    diffuse_texture = TextureManager::current()->get(*diffuse_texture_mapping, rect);
+    diffuse_texture = TextureManager::current()->get(*diffuse_texture_mapping,
+      rect, false);
   }
 
   TexturePtr displacement_texture;
   boost::optional<ReaderMapping> displacement_texture_mapping;
   if (mapping.get("displacement-texture", displacement_texture_mapping))
   {
-    displacement_texture = TextureManager::current()->get(*displacement_texture_mapping, rect);
+    displacement_texture = TextureManager::current()->get(
+      *displacement_texture_mapping, rect, false);
   }
 
   Flip flip = NO_FLIP;
@@ -55,7 +57,8 @@ Surface::from_reader(const ReaderMapping& mapping, const boost::optional<Rect>& 
 }
 
 SurfacePtr
-Surface::from_file(const std::string& filename, const boost::optional<Rect>& rect)
+Surface::from_file(const std::string& filename,
+  const boost::optional<Rect>& rect, bool to_linear)
 {
   if (StringUtil::has_suffix(filename, ".surface"))
   {
@@ -76,12 +79,14 @@ Surface::from_file(const std::string& filename, const boost::optional<Rect>& rec
   {
     if (rect)
     {
-      TexturePtr texture = TextureManager::current()->get(filename, *rect);
+      TexturePtr texture = TextureManager::current()->get(filename, *rect,
+        to_linear);
       return SurfacePtr(new Surface(texture, TexturePtr(), NO_FLIP, filename));
     }
     else
     {
-      TexturePtr texture = TextureManager::current()->get(filename);
+      TexturePtr texture = TextureManager::current()->get(filename,
+        to_linear);
       return SurfacePtr(new Surface(texture, TexturePtr(), NO_FLIP, filename));
     }
   }
